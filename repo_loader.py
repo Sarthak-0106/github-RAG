@@ -1,7 +1,7 @@
 import os
 from git import Repo
 from langchain_core.documents import Document
-from tree_sitter_languages import get_parser
+from tree_sitter_languages import get_language, get_parser
 
 # ---------------- CONFIG ---------------- #
 
@@ -63,7 +63,7 @@ def split_code_tree_sitter(content, file_path, language):
                         break
 
                 # Avoid tiny useless chunks
-                if len(code.strip()) > 50:
+                if len(code.strip()) > 20:
                     chunks.append(
                         Document(
                             page_content=code,
