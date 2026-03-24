@@ -12,20 +12,22 @@ def get_llm():
 
 def create_qa_chain(llm, vector_store):
 
-    retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+    retriever = vector_store.as_retriever(search_kwargs={"k": 10})
 
     prompt = ChatPromptTemplate.from_template("""
-    You are a codebase assistant.
+    You are an expert software engineer analyzing a GitHub repository.
 
-    Answer ONLY from the provided context.
-    Do NOT guess or infer.
+    Use ONLY the provided context.
 
-    If the answer is not clearly present, say:
-    "I could not find this in the codebase."
+    Rules:
+    - You may infer high-level purpose ONLY if there are strong signals (file names, README, structure)
+    - DO NOT invent features or functionality not supported by context
+    - If unsure, say: "Based on the available code, it appears that..."
+    - If no useful info exists, say: "I could not find enough information in the codebase."
 
     Always include:
-    - File name
-    - Function/Class name (if available)
+    - File names when relevant
+    - Function/class names when relevant
 
     Context:
     {context}
@@ -36,8 +38,21 @@ def create_qa_chain(llm, vector_store):
     Answer:
     """)
     
+    # def format_docs(docs):
+    #     return "\n\n".join(doc.page_content for doc in docs)
+
     def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
+    # PRIORITY SORT
+        docs = sorted(
+            docs,
+            key=lambda x: x.metadata.get("priority", 1),
+            reverse=True
+        )
+
+        return "\n\n".join(
+            f"[FILE: {doc.metadata.get('source')}]\n{doc.page_content}"
+            for doc in docs
+        )
 
     chain = (
         {

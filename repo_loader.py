@@ -103,6 +103,22 @@ def clone_repo(repo_url, base_path="repos"):
 
 # ---------------- LOADER ---------------- #
 
+def create_repo_summary(documents):
+    files = set(doc.metadata["source"] for doc in documents)
+
+    structure = "Project Structure:\n\n"
+    for f in sorted(files):
+        structure += f"- {f}\n"
+
+    return Document(
+        page_content=structure,
+        metadata={
+            "source": "repo_summary",
+            "type": "repo_summary",
+            "priority": 9
+        }
+    )
+
 def load_repo_files(repo_path):
     documents = []
 
@@ -119,6 +135,19 @@ def load_repo_files(repo_path):
                     content = f.read()
 
                 relative_path = os.path.relpath(file_path, repo_path)
+                if file.lower() == "readme.md":
+                    documents.append(
+                        Document(
+                            page_content=content,
+                            metadata={
+                                "source": "README",
+                                "type": "readme",
+                                "priority": 10
+                            }
+                        )
+                    )
+                    continue
+
                 language = detect_language(file)
 
                 # AST-based splitting
@@ -145,4 +174,5 @@ def load_repo_files(repo_path):
             except Exception as e:
                 print(f"Error loading {file_path}: {e}")
 
+    documents.append(create_repo_summary(documents))
     return documents

@@ -41,6 +41,9 @@ qa_chain = create_qa_chain(llm, db)
 while True:
     query = input("\nAsk a question (or 'exit'): ")
 
+    if "project" in query.lower() or "about" in query.lower():
+        query += " README overview architecture purpose"
+
     if query.lower() == "exit":
         break
 
