@@ -20,6 +20,8 @@ def create_qa_chain(llm, vector_store):
     Use ONLY the provided context.
 
     Rules:
+    - Use chat history to understand follow-up questions
+    - Do NOT repeat previous answers unless needed
     - You may infer high-level purpose ONLY if there are strong signals (file names, README, structure)
     - DO NOT invent features or functionality not supported by context
     - If unsure, say: "Based on the available code, it appears that..."
@@ -28,7 +30,10 @@ def create_qa_chain(llm, vector_store):
     Always include:
     - File names when relevant
     - Function/class names when relevant
-
+                                              
+    Chat History:
+    {chat_history}
+                                              
     Context:
     {context}
 
@@ -54,10 +59,23 @@ def create_qa_chain(llm, vector_store):
             for doc in docs
         )
 
+    def format_history(history):
+        return "\n".join(
+            f"User: {h['question']}\nAssistant: {h['answer']}"
+            for h in history[-5:]  # last 5 only 🔥
+        )
+
     chain = (
         {
-            "context": retriever | format_docs,
-            "question": lambda x: x
+            "context": lambda x: format_docs(
+                retriever.invoke(
+                    x["question"] + " " + " ".join(
+                        h["question"] for h in x["chat_history"][-2:]
+                    )
+                )
+            ),
+            "question": lambda x: x["question"],
+            "chat_history": lambda x: format_history(x["chat_history"])
         }
         | prompt
         | llm

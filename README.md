@@ -10,6 +10,7 @@ This project clones a repo, parses its code using AST (Tree-sitter), creates emb
 
 * 🔍 Clone and analyze any public GitHub repository
 * 🧠 AST-based code chunking (functions, classes) using Tree-sitter
+* 💬 Context-aware chat (remembers conversation history)
 * 📄 README-aware understanding for high-level questions
 * 🧩 Semantic search with vector embeddings
 * 💬 Ask questions like:
